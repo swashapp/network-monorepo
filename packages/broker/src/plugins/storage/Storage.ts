@@ -36,6 +36,7 @@ export class Storage extends EventEmitter {
     bucketManager: BucketManager
     batchManager: BatchManager
     pendingStores: Map<string,NodeJS.Timeout>
+    stored: Record<string, number> = {}
 
     constructor(cassandraClient: Client, opts: Todo) {
         super()
@@ -59,7 +60,11 @@ export class Storage extends EventEmitter {
     }
 
     async store(streamMessage: Protocol.StreamMessage): Promise<boolean> {
-        logger.debug('Store message')
+        if (this.stored[streamMessage.getStreamId()] == null) {
+            this.stored[streamMessage.getStreamId()] = 0
+        }
+        this.stored[streamMessage.getStreamId()] += 1
+        logger.info('Store message (n=%d, streamId=%s, payload=%j)', this.stored[streamMessage.getStreamId()], streamMessage.getStreamId(), streamMessage.getParsedContent())
 
         const bucketId = this.bucketManager.getBucketId(streamMessage.getStreamId(), streamMessage.getStreamPartition(), streamMessage.getTimestamp())
 

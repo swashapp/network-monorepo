@@ -67,7 +67,7 @@ export class RequestHandler {
     }
 
     handleRequest(connection: Connection, request: Protocol.ControlLayer.ControlMessage): Promise<any> {
-        logger.info(`WebSocket ${ControlMessageType[request.type]}: ${request.requestId}`)
+        logger.trace(`WebSocket ${ControlMessageType[request.type]}: ${request.requestId}`)
         switch (request.type) {
             case ControlLayer.ControlMessage.TYPES.SubscribeRequest:
                 return this.subscribe(connection, request as SubscribeRequest)
@@ -92,6 +92,7 @@ export class RequestHandler {
     }
 
     private async publish(connection: Connection, request: PublishRequest) {
+        logger.info('Received PublishRequest: stream %s, content %j', request.streamMessage.getStreamId(), request.streamMessage.getParsedContent())
         const { streamMessage } = request
 
         try {

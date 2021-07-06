@@ -8,7 +8,9 @@ import { StorageConfig } from './StorageConfig'
 import { StreamPart } from '../../types'
 import { Wallet } from 'ethers'
 import PLUGIN_CONFIG_SCHEMA from './config.schema.json'
-import { Protocol } from 'streamr-network'
+import { Protocol, Logger } from 'streamr-network'
+
+const staticLogger = new Logger(module)
 
 export interface StoragePluginConfig {
     cassandra: {
@@ -43,6 +45,7 @@ export class StoragePlugin extends Plugin<StoragePluginConfig> {
                 partition: msg.messageId.streamPartition
             }
             if (this.storageConfig!.hasStream(streamPart)) {
+                staticLogger.info('received message %s: %j', msg.getStreamId(), msg.getParsedContent())
                 this.cassandra!.store(msg)
             }
         }
