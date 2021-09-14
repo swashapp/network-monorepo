@@ -117,7 +117,6 @@ describeRepeats('StreamrClient', () => {
     beforeEach(async () => {
         client = createClient()
         await Promise.all([
-            client.session.getSessionToken(),
             client.connect(),
         ])
         stream = await createStream()

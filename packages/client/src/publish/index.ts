@@ -68,13 +68,12 @@ export default class Publisher {
         })
     }
 
-    private async sendMessage(streamMessage: StreamMessage, sessionToken?: string) {
+    private async sendMessage(streamMessage: StreamMessage) {
         const { client } = this
         const requestId = uuid('pub')
         const request = new ControlLayer.PublishRequest({
             streamMessage,
             requestId,
-            sessionToken: sessionToken || null,
         })
 
         this.listenForErrors(request).catch(this.onErrorEmit) // unchained async
@@ -122,9 +121,8 @@ export default class Publisher {
         // no async before running sendQueue
         return this.sendQueue(streamId, async () => {
             const [streamMessage] = await asyncDepsTask
-            const sessionToken = await this.client.session.getSessionToken()
             try {
-                return await this.sendMessage(streamMessage, sessionToken)
+                return await this.sendMessage(streamMessage)
             } finally {
                 this.refreshAutoDisconnectTimeout()
             }
