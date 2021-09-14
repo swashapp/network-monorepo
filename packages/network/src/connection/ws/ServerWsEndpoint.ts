@@ -86,6 +86,9 @@ export class ServerWsEndpoint extends AbstractWsEndpoint<ServerWsConnection> {
                 duplexStream.on('drain', () => {
                     connection.evaluateBackPressure()
                 })
+                duplexStream.on('error', (err) => {
+                    this.logger.warn('duplexStream for "%s" emitted error: %s', this.peerInfo.peerId, err)
+                })
                 this.onNewConnection(connection)
             }
         })
