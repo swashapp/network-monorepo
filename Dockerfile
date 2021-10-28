@@ -1,4 +1,4 @@
-FROM node:16-buster as build
+FROM node:17-buster as build
 WORKDIR /usr/src/monorepo
 COPY . .
 RUN npm set unsafe-perm true && \
@@ -11,7 +11,7 @@ RUN npm set unsafe-perm true && \
 	# restore inter-package symlinks removed by npm prune
 	npx lerna link
 
-FROM node:16-buster-slim
+FROM node:17-buster
 RUN apt-get update && apt-get install --assume-yes --no-install-recommends curl \
 	&& apt-get clean \
 	&& rm -rf /var/lib/apt/lists/*
