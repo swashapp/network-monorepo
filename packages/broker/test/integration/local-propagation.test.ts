@@ -10,6 +10,8 @@ const httpPort = 17712
 const wsPort = 17713
 const mqttPort = 17751
 
+jest.setTimeout(60000)
+
 describe('local propagation', () => {
     let tracker: Tracker
     let broker: Broker
@@ -32,7 +34,7 @@ describe('local propagation', () => {
 
         broker = await startBroker({
             name: 'broker1',
-            privateKey: '0xfe77283a570fda0e581897b18d65632c438f0d00f9440183119c1b7e4d5275e1',
+            privateKey: privateKey,
             trackerPort,
             httpPort,
             wsPort,
@@ -51,7 +53,7 @@ describe('local propagation', () => {
         freshStreamId = freshStream.id
 
         await wait(3000)
-    }, 10 * 1000)
+    })
 
     afterEach(async () => {
         await Promise.all([
@@ -63,112 +65,6 @@ describe('local propagation', () => {
             broker.stop()
         ])
     })
-
-    test('local propagation using StreamrClients', async () => {
-        const client1Messages: any[] = []
-        const client2Messages: any[] = []
-
-        await Promise.all([
-            client1.subscribe({
-                stream: freshStreamId
-            }, (message) => {
-                client1Messages.push(message)
-            }),
-            client2.subscribe({
-                stream: freshStreamId
-            }, (message) => {
-                client2Messages.push(message)
-            })
-        ])
-
-        await client1.publish(freshStreamId, {
-            key: 1
-        })
-        await client1.publish(freshStreamId, {
-            key: 2
-        })
-        await client1.publish(freshStreamId, {
-            key: 3
-        })
-
-        await waitForCondition(() => client2Messages.length === 3)
-        await waitForCondition(() => client1Messages.length === 3)
-
-        expect(client1Messages).toEqual([
-            {
-                key: 1
-            },
-            {
-                key: 2
-            },
-            {
-                key: 3
-            },
-        ])
-
-        expect(client2Messages).toEqual([
-            {
-                key: 1
-            },
-            {
-                key: 2
-            },
-            {
-                key: 3
-            },
-        ])
-    })
-
-    test('local propagation using mqtt clients', async () => {
-        const client1Messages: any[] = []
-        const client2Messages: any[] = []
-
-        await waitForCondition(() => mqttClient1.connected)
-        await waitForCondition(() => mqttClient2.connected)
-
-        mqttClient1.on('message', (_topic, message) => {
-            client1Messages.push(JSON.parse(message.toString()))
-        })
-
-        mqttClient2.on('message', (_topic, message) => {
-            client2Messages.push(JSON.parse(message.toString()))
-        })
-
-        await mqttClient1.subscribe(freshStreamId)
-        await mqttClient2.subscribe(freshStreamId)
-
-        await mqttClient1.publish(freshStreamId, 'key: 1', {
-            qos: 1
-        })
-
-        await waitForCondition(() => client1Messages.length === 1)
-        await waitForCondition(() => client2Messages.length === 1)
-
-        await mqttClient2.publish(freshStreamId, 'key: 2', {
-            qos: 1
-        })
-
-        await waitForCondition(() => client1Messages.length === 2)
-        await waitForCondition(() => client2Messages.length === 2)
-
-        expect(client1Messages).toEqual([
-            {
-                mqttPayload: 'key: 1'
-            },
-            {
-                mqttPayload: 'key: 2'
-            }
-        ])
-
-        expect(client2Messages).toEqual([
-            {
-                mqttPayload: 'key: 1'
-            },
-            {
-                mqttPayload: 'key: 2'
-            }
-        ])
-    }, 10000)
 
     test('local propagation using StreamrClients and mqtt clients', async () => {
         const client1Messages: any[] = []
@@ -209,7 +105,12 @@ describe('local propagation', () => {
             qos: 1
         })
 
-        await waitForCondition(() => client1Messages.length === 1)
+        await wait(10000)
+
+        await waitForCondition(() => {
+            console.log('##### ' + client1Messages.length);
+            return client1Messages.length === 1
+        })
         await waitForCondition(() => client2Messages.length === 1)
         await waitForCondition(() => client3Messages.length === 1)
         await waitForCondition(() => client4Messages.length === 1)
@@ -299,5 +200,5 @@ describe('local propagation', () => {
                 key: 4
             },
         ])
-    }, 10000)
+    })
 })

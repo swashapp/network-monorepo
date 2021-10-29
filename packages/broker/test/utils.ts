@@ -78,9 +78,8 @@ export const formConfig = ({
         }
     }
     if (legacyMqttPort) {
-        plugins['legacyMqtt'] = {
-            port: legacyMqttPort,
-            streamsTimeout: 300000
+        plugins['mqtt'] = {
+            port: legacyMqttPort
         }
     }
 
